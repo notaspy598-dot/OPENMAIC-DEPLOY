@@ -1,0 +1,27 @@
+# OpenMAIC model configuration. Mounted read-only at /app/openmaic.yml.
+# Keys come from the container environment as ${VAR}. Restart after editing.
+
+providers:
+  anthropic:
+    preset: anthropic
+    apiKey: ${ANTHROPIC_API_KEY}
+    models: [claude-sonnet-5-5, claude-haiku-5-5]
+
+  # Your existing SearXNG on the VPS: free web search for filling knowledge gaps.
+  # Its settings.yml must allow the json format (search.formats: [html, json]).
+  searxng:
+    preset: searxng
+    baseUrl: ${SEARXNG_URL}
+
+slots:
+  llm:
+    model: anthropic:claude-sonnet-5-5
+    fallback: anthropic:claude-haiku-5-5
+  webSearch: searxng
+  # Off to save money and RAM. Turn on later by giving each a provider.
+  video: null
+  image: null
+  tts: null
+
+# Only the providers above; nobody can add paid keys through the web UI.
+allowUserKeys: false

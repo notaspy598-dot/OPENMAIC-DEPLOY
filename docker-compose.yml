@@ -1,0 +1,55 @@
+# OpenMAIC for Coolify (Docker Compose build pack).
+# Pulls a prebuilt image: nothing is compiled on the VPS.
+# Set the ${...} variables in Coolify's Environment Variables tab.
+# Set the domain on the openmaic service in Coolify as https://<your-domain>:3000
+# No ports are published: Coolify's proxy routes to the container.
+
+services:
+  openmaic:
+    # Change CHANGE_ME to your GitHub username (lowercase). Bump the tag to upgrade.
+    image: ghcr.io/CHANGE_ME/openmaic:v1.4.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Password must be letters and digits only: it goes into the URL unencoded.
+      DATABASE_URL: postgres://openmaic:${POSTGRES_PASSWORD}@postgres:5432/openmaic
+      # One library for you; the access code is the only lock on it.
+      OWNER_SINGLE_USER: "true"
+      ACCESS_CODE: ${ACCESS_CODE}
+      # Coolify's Traefik proxy overwrites X-Forwarded-For, so trusting it is safe
+      # and turns on rate limiting of access-code guesses.
+      TRUST_PROXY_HEADERS: "true"
+      # Encrypts provider keys saved in the web settings. Keep it with the database.
+      OPENMAIC_SECRET_KEY: ${OPENMAIC_SECRET_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      SEARXNG_URL: ${SEARXNG_URL}
+      # Keep the JS heap under the container limit so Node collects garbage
+      # instead of being killed.
+      NODE_OPTIONS: --max-old-space-size=1024
+    volumes:
+      - ./openmaic.yml:/app/openmaic.yml:ro
+      - openmaic-data:/app/data
+    # Hard cap: a spike restarts OpenMAIC, never Supabase or n8n.
+    mem_limit: 1536m
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: openmaic
+      POSTGRES_USER: openmaic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openmaic -d openmaic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - openmaic-postgres:/var/lib/postgresql/data
+    mem_limit: 384m
+    restart: unless-stopped
+
+volumes:
+  openmaic-data:
+  openmaic-postgres:
