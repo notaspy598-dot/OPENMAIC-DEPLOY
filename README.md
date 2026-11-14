@@ -11,15 +11,15 @@ capped at 1.5 GB of RAM and its Postgres at 384 MB.
 
 ## 1. Build the image on GitHub
 
-1. Create a **private** GitHub repo, for example `openmaic-deploy`, and push this folder to it.
+1. Create a **public** GitHub repo, for example `openmaic-deploy`, and push this folder to it. It must be public: public repos get GitHub's 16 GB runner, and OpenMAIC's `next build` runs out of memory on the 7 GB runner that private repos get. Nothing secret is in this folder; every key is a `${VAR}` that you set in Coolify.
 2. In the repo, go to **Actions → Build OpenMAIC image → Run workflow**. Keep `v1.4.2`, the latest stable release, or enter a newer tag.
-3. Wait for it to go green. The first build takes roughly 15–30 minutes; later builds are faster because of the cache.
+3. Wait for it to go green. It takes roughly 15–30 minutes.
 
-The image ends up at `ghcr.io/<your-github-username>/openmaic:v1.4.2`, and it is private.
+The image ends up at `ghcr.io/<your-github-username>/openmaic:v1.4.2`. It's just upstream OpenMAIC, built unchanged, with no secrets inside.
 
-## 2. Let the VPS pull the private image
+## 2. Let the VPS pull the image (only if the package is private)
 
-Create a GitHub token: **Settings → Developer settings → Personal access tokens (classic)**. It needs only the `read:packages` scope. Then run this on the VPS:
+Check the package's visibility on GitHub under **your profile → Packages → openmaic**. If it's public, skip this step. If it's private, create a GitHub token: **Settings → Developer settings → Personal access tokens (classic)**. It needs only the `read:packages` scope. Then run this on the VPS:
 
 ```bash
 docker login ghcr.io -u <your-github-username>

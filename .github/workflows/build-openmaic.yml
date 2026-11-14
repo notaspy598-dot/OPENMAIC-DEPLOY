@@ -40,6 +40,10 @@ jobs:
 
       # NEXT_PUBLIC_* build args are left empty, so every feature keeps
       # OpenMAIC's documented default. The heavy MP4 render service is not built.
+      # No layer cache: upstream dropped it too (`COPY . .` invalidates it, and
+      # exporting it took longer than it saved).
+      # Needs the 16 GB runner of a PUBLIC repo: `next build` runs out of
+      # memory on the 7 GB runner private repos get.
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -48,5 +52,3 @@ jobs:
           tags: |
             ${{ steps.img.outputs.name }}:${{ inputs.ref }}
             ${{ steps.img.outputs.name }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
